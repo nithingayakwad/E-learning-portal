@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Course: {{ course.course_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">E-Learning Portal</a>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/instructor/dashboard">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="container mt-5">
+        <h2>Manage Course: {{ course.course_name }}</h2>
+        <p><a href="{{ url_for('instructor_dashboard') }}" class="btn btn-sm btn-secondary mb-3">Back to Dashboard</a></p>
+
+        <h3>Add New Material:</h3>
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.csrf_token }}
+            <div class="form-group">
+                {{ form.title.label }} {{ form.title(class="form-control") }}
+                {% for error in form.title.errors %}
+                    <small class="form-text text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.material_type.label }} {{ form.material_type(class="form-control") }}
+                {% for error in form.material_type.errors %}
+                    <small class="form-text text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            <div class="form-group" id="file-upload-group">
+                {{ form.file.label }} {{ form.file(class="form-control-file") }}
+                {% for error in form.file.errors %}
+                    <small class="form-text text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            <div class="form-group" id="url-group">
+                {{ form.url.label }} {{ form.url(class="form-control") }}
+                {% for error in form.url.errors %}
+                    <small class="form-text text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+
+        <h3 class="mt-4">Existing Materials:</h3>
+        {% if materials %}
+            <ul class="list-group">
+                {% for material in materials %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ material.title }}</strong> ({{ material.material_type }})
+                            {% if material.material_type == 'pdf' and material.file_path %}
+                                <p><a href="{{ url_for('static', filename=material.file_path.replace('static/', '')) }}" target="_blank">View PDF</a></p>
+                            {% elif material.material_type == 'image' and material.file_path %}
+                                <img src="{{ url_for('static', filename=material.file_path.replace('static/', '')) }}" alt="{{ material.title }}" class="img-fluid" style="max-width: 200px;">
+                            {% elif material.material_type == 'link' and material.url %}
+                                <p><a href="{{ material.url }}" target="_blank">Go to Link</a></p>
+                            {% elif material.material_type == 'video' %}
+                                {% if material.url %}
+                                    {% set video_id = material.url.split('v=')[1] if 'v=' in material.url else material.url %}
+                                    {% if video_id %}
+                                        <div class="embed-responsive embed-responsive-16by9" style="max-width: 400px;">
+                                            <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/{{ video_id }}" frameborder="0" allowfullscreen></iframe>
+                                        </div>
+                                    {% else %}
+                                        <p><a href="{{ material.url }}" target="_blank">View Video (External Link)</a></p>
+                                    {% endif %}
+                                {% elif material.file_path %}
+                                    <video controls width="320" height="240">
+                                        <source src="{{ url_for('static', filename=material.file_path.replace('static/', '')) }}" type="video/mp4">
+                                        <source src="{{ url_for('static', filename=material.file_path.replace('static/', '')) }}" type="video/webm">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('delete_material', course_id=course.course_id, material_id=material.material_id) }}" class="btn btn-danger btn-sm">Delete</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No materials added yet.</p>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#material_type').change(function() {
+                var selectedType = $(this).val();
+                if (selectedType === 'video_upload') {
+                    $('#file-upload-group').show();
+                    $('#url-group').hide();
+                } else if (selectedType === 'video_url' || selectedType === 'link') {
+                    $('#file-upload-group').hide();
+                    $('#url-group').show();
+                } else {
+                    $('#file-upload-group').show();
+                    $('#url-group').hide();
+                    if (selectedType === 'pdf' || selectedType === 'image') {
+                        $('#url-group').hide(); // Hide URL for file uploads
+                    }
+                }
+                // Initially hide URL field
+                if ($('#material_type').val() !== 'video_url' && $('#material_type').val() !== 'link') {
+                    $('#url-group').hide();
+                }
+                // Initially hide file upload field
+                if ($('#material_type').val() !== 'video_upload' && $('#material_type').val() !== 'pdf' && $('#material_type').val() !== 'image') {
+                    $('#file-upload-group').hide();
+                }
+            }).change(); // Trigger on load
+        });
+    </script>
+</body>
+</html>

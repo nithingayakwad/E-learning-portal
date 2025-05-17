@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">E-Learning Portal</a>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/student/dashboard">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <div class="container mt-5">
+        <h2>Student Dashboard</h2>
+
+        <form method="POST" action="{{ url_for('student_dashboard') }}" class="mb-3">
+            <div class="form-group">
+                <label for="search_query">Search Available Courses:</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search_query" name="search_query" placeholder="Enter course name" value="{{ search_query or '' }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <h3>Your Enrolled Courses:</h3>
+        {% if courses %}
+            <ul class="list-group">
+                {% for course in courses %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('view_course', course_id=course.course_id) }}">{{ course.course_name }}</a> - {{ course.description }}
+                        <a href="{{ url_for('unenroll_course', course_id=course.course_id) }}" class="btn btn-sm btn-danger ml-2">Unenroll</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You are not currently enrolled in any courses.</p>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <h3>Available Courses:</h3>
+        {% if available_courses %}
+            <ul class="list-group">
+                {% for course in available_courses %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {{ course.course_name }} - {{ course.description }}
+                        </div>
+                        <a href="{{ url_for('enroll_course', course_id=course.course_id) }}" class="btn btn-sm btn-success">Enroll</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No other courses are currently available.</p>
+        {% endif %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
